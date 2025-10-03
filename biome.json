@@ -1,0 +1,32 @@
+{
+   "linter": {
+      "enabled": true,
+      "rules": {
+         "recommended": true,
+         "style": {
+            "noNonNullAssertion": "off",
+            "useConst": "error",
+            "useNodejsImportProtocol": "off",
+            "useTemplate": "off"
+         },
+         "correctness": {
+            "noUnusedVariables": "off"
+         },
+         "suspicious": {
+            "noExplicitAny": "off",
+            "noControlCharactersInRegex": "off",
+            "noEmptyInterface": "off"
+         }
+      }
+   },
+   "formatter": {
+      "enabled": true,
+      "indentStyle": "space",
+      "indentWidth": 3,
+      "lineWidth": 120
+   },
+   "files": {
+      "ignoreUnknown": false,
+      "includes": ["src/**/*.ts", "example/**/*.ts", "*.json", "!dist"]
+   }
+}

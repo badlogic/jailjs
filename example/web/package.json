@@ -1,0 +1,19 @@
+{
+   "name": "jailjs-example-web",
+   "version": "1.0.0",
+   "type": "module",
+   "scripts": {
+      "dev": "vite",
+      "build": "vite build",
+      "preview": "vite preview",
+      "check": "biome check . --write && tsc --noEmit"
+   },
+   "dependencies": {
+      "@mariozechner/jailjs": "file:../../"
+   },
+   "devDependencies": {
+      "@biomejs/biome": "^2.2.4",
+      "typescript": "^5.9.2",
+      "vite": "^7.1.6"
+   }
+}

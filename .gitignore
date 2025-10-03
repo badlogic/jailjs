@@ -1,0 +1,15 @@
+node_modules
+dist
+.DS_Store
+*.log
+*.tmp
+.env
+.env.local
+.vscode
+*.swp
+*.swo
+.idea
+example/web/node_modules
+example/web/dist
+example/node/node_modules
+example/node/dist

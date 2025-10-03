@@ -1,0 +1,20 @@
+{
+   "name": "jailjs-example-node",
+   "version": "1.0.0",
+   "type": "module",
+   "scripts": {
+      "dev": "tsx src/index.ts",
+      "build": "tsc",
+      "start": "node dist/index.js",
+      "check": "biome check . --write && tsc --noEmit"
+   },
+   "dependencies": {
+      "@mariozechner/jailjs": "file:../../"
+   },
+   "devDependencies": {
+      "@biomejs/biome": "^2.2.4",
+      "@types/node": "^24.5.2",
+      "tsx": "^4.20.5",
+      "typescript": "^5.9.2"
+   }
+}

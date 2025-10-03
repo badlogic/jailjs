@@ -1,0 +1,47 @@
+{
+   "name": "@mariozechner/jailjs",
+   "version": "0.1.0",
+   "description": "JavaScript AST interpreter for sandboxed execution in browsers and Node.js",
+   "author": "Mario Zechner",
+   "type": "module",
+   "main": "./dist/index.js",
+   "module": "./dist/index.js",
+   "types": "./dist/index.d.ts",
+   "files": [
+      "dist",
+      "README.md"
+   ],
+   "exports": {
+      ".": {
+         "types": "./dist/index.d.ts",
+         "import": "./dist/index.js"
+      },
+      "./dist/*": "./dist/*"
+   },
+   "scripts": {
+      "build": "tsc",
+      "build:example": "cd example/web && npm run build",
+      "dev": "npm install && cd example/web && npm install && cd ../node && npm install && cd ../.. && concurrently -k \"npm run dev:tsc\" \"npm run dev:example\"",
+      "dev:tsc": "tsc --watch",
+      "dev:example": "cd example/web && npm run dev",
+      "check": "biome check . --write && tsc --noEmit && cd example/web && npm run check && cd ../node && npm run check",
+      "prepare": "husky",
+      "test": "vitest",
+      "test:ui": "vitest --ui"
+   },
+   "dependencies": {
+      "@babel/parser": "^7.26.10",
+      "@babel/types": "^7.26.10"
+   },
+   "devDependencies": {
+      "@biomejs/biome": "^2.2.4",
+      "@types/babel__traverse": "^7.20.6",
+      "@types/node": "^24.5.2",
+      "@vitest/ui": "^3.2.4",
+      "concurrently": "^9.2.1",
+      "happy-dom": "^15.11.7",
+      "husky": "^9.1.7",
+      "typescript": "^5.9.2",
+      "vitest": "^3.2.4"
+   }
+}
