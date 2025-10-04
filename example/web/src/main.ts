@@ -94,6 +94,7 @@ const interpreter = new Interpreter(
    },
    {
       parse: parse,
+      maxOps: 1000000, // Prevent infinite loops
    },
 );
 

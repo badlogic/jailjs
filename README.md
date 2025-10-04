@@ -125,17 +125,67 @@ The transform module uses `@babel/standalone` and is tree-shakeable - only inclu
 
 ## Security
 
-- **Sandboxed**: Custom global environment, no access to host globals unless explicitly provided
-- **Prototype pollution protection**: Blocks `__proto__`, `constructor.prototype` access
-- **Timeout protection**: Optional operation counting with `maxOps`
-- **eval() control**: Requires explicit parser injection, disabled by default
+⚠️ **Important**: JailJS provides **isolation**, not complete security. It is suitable for:
+- Running user scripts with limited access to your application's APIs
+- Isolating untrusted code from your main execution context
+- Providing a restricted JavaScript environment for extensions/plugins
+
+**It is NOT suitable for**:
+- Running adversarial code from untrusted sources
+- Production security sandboxing without additional layers
+- Environments where a determined attacker could cause harm
+
+### What JailJS Provides
+
+✅ **Scope isolation**: Custom global environment, no access to host globals unless explicitly provided
+✅ **Basic prototype protection**: Blocks direct `__proto__` and `constructor.prototype` access
+✅ **Operation limits**: Optional operation counting with `maxOps` to prevent infinite loops
+✅ **eval() control**: Requires explicit parser injection, disabled by default
+✅ **Custom built-ins**: Override or limit standard JavaScript APIs
+
+### Known Limitations
+
+❌ **Shared object references**: Built-ins like `Math`, `Object`, `Array` are passed by reference and can be mutated
+❌ **No prototype whitelist**: Any method on built-in prototypes can be accessed
+❌ **No advanced jailbreak protection**: Determined attackers may find bypass techniques
+❌ **No memory limits**: Can allocate unlimited objects/arrays until system limits
+❌ **Simple operation counter**: `maxOps` is a basic counter, not a comprehensive execution quota
+
+### Recommendations for Safer Use
 
 ```typescript
+// 1. Set operation limits
 const interpreter = new Interpreter({}, {
   maxOps: 100000,  // Prevent infinite loops
-  parse: parse      // Enable eval() in sandboxed code
+  parse: parse     // Only if you need eval()
 });
+
+// 2. Provide frozen/cloned built-ins to prevent mutation
+const safeMath = Object.freeze({ ...Math });
+const interpreter = new Interpreter({
+  Math: safeMath,
+  console: {
+    log: (...args) => console.log('[Sandboxed]', ...args)
+  }
+});
+
+// 3. Minimize provided globals - only give what's needed
+const interpreter = new Interpreter({
+  // Minimal set - don't include Object, Array, etc. unless required
+});
+
+// 4. For production, layer additional security:
+// - Run in web workers or separate processes
+// - Use Content Security Policy (CSP) headers
+// - Implement rate limiting and resource quotas
+// - Monitor and log all executed code
 ```
+
+For mission-critical security sandboxing, consider:
+- [SandboxJS](https://github.com/nyariv/SandboxJS) - Whitelist-based prototype access control
+- [isolated-vm](https://github.com/laverdet/isolated-vm) - V8 isolates for Node.js
+- [QuickJS](https://bellard.org/quickjs/) - Separate JavaScript engine
+- Web Workers or separate processes for true isolation
 
 ## API
 
@@ -187,11 +237,11 @@ function transformToES5(
 - Arrow functions, classes, template literals
 - `let`/`const`, destructuring, spread
 - Default parameters, computed properties
-- Async/await (basic support - return values may be incorrect)
+- Async/await (full support via regenerator)
 - TypeScript and JSX (optional)
 
 **Not Supported**:
-- Generators (complex regenerator state machine)
+- Generators (complex state machine, work in progress)
 - ES6 modules (use bundler instead)
 
 ## Performance
