@@ -32,7 +32,7 @@ console.log(result); // 4
 
 See the [example](example/) folder for complete demonstrations:
 
-- **[web](example/web)** - Browser playground with Tailwind UI, demonstrates recursion, closures, array methods
+- **[web](example/web)** - Browser playground , demonstrates recursion, closures, array methods
 - **[node](example/node)** - CLI demo showing sandboxed execution, timeout protection, and eval()
 - **[chrome-extension](example/chrome-extension)** - Manifest V3 extension with Tampermonkey-style user scripts, DOM access in isolated world
 
@@ -60,13 +60,12 @@ Function: undefined  // Blocked to prevent sandbox escape
 eval: (code) => ...  // Re-implemented through interpreter (requires parser injection)
 ```
 
-Override by passing custom globals:
+Extend by passing custom globals:
 
 ```typescript
 const interpreter = new Interpreter({
   console: { log: (...args) => console.log('[Sandbox]', ...args) },
-  Math: Math,
-  // Only these globals will be available
+  document: document, // This breaks sandbox but gives DOM access
 });
 ```
 
@@ -91,13 +90,14 @@ Bundle size: **10 KB** (interpreter only) vs **310 KB** (interpreter + parser)
 
 ## ES6+ Transformation
 
-Transform modern JavaScript to ES5 using the optional `transform` module:
+Transform modern JavaScript to ES5 using the optional `transform` module. Supports classes, async/await, arrow functions, destructuring, spread operators, and more.
+
+### Arrow Functions & Template Literals
 
 ```typescript
 import { Interpreter } from '@mariozechner/jailjs';
 import { transformToES5 } from '@mariozechner/jailjs/transform';
 
-// Transform ES6+ to ES5 AST
 const code = `
   const arrow = (x) => x * 2;
   const numbers = [1, 2, 3];
@@ -111,7 +111,61 @@ const result = interpreter.evaluate(ast);
 console.log(result); // "Result: 2, 4, 6"
 ```
 
-**Options**:
+### Classes
+
+```typescript
+const code = `
+  class Counter {
+    constructor(start = 0) {
+      this.value = start;
+    }
+
+    increment() {
+      return ++this.value;
+    }
+  }
+
+  const counter = new Counter(10);
+  counter.increment(); // 11
+`;
+
+const ast = transformToES5(code);
+const result = interpreter.evaluate(ast);
+console.log(result); // 11
+```
+
+### Async/Await
+
+```typescript
+const code = `
+  async function fetchData() {
+    const result = await Promise.resolve(42);
+    return result * 2;
+  }
+
+  fetchData(); // Returns Promise
+`;
+
+const ast = transformToES5(code);
+const result = interpreter.evaluate(ast);
+result.then(value => console.log(value)); // 84
+```
+
+### Destructuring & Spread
+
+```typescript
+const code = `
+  const [first, ...rest] = [1, 2, 3, 4];
+  const obj = { a: 1, b: 2, ...{ c: 3 } };
+  ({ a: first, b: rest[0], c: obj.c })
+`;
+
+const ast = transformToES5(code);
+const result = interpreter.evaluate(ast);
+console.log(result); // { a: 1, b: 2, c: 3 }
+```
+
+**Transform Options**:
 
 ```typescript
 transformToES5(code, {
@@ -120,6 +174,13 @@ transformToES5(code, {
   jsx: true                // Enable JSX support
 });
 ```
+
+**Supported ES6+ Features**:
+- ✅ Arrow functions, classes, template literals
+- ✅ `let`/`const`, destructuring, spread operators
+- ✅ Default parameters, computed properties
+- ✅ Async/await (full support via regenerator)
+- ✅ TypeScript and JSX (optional)
 
 The transform module uses `@babel/standalone` and is tree-shakeable - only include it if you need ES6+ support. Note: adds ~3 MB to bundle size.
 
@@ -226,23 +287,27 @@ function transformToES5(
 
 ## Supported Features
 
-**ES5 Complete**:
-- All operators, control flow, statements
-- Functions, closures, recursion
-- Objects, arrays, prototypes
-- Variable hoisting (var)
-- Proper `this` binding and `arguments`
+### Native ES5 Support (Zero Dependencies)
+- ✅ All operators, control flow, statements
+- ✅ Functions, closures, recursion
+- ✅ Objects, arrays, prototypes
+- ✅ Variable hoisting (var)
+- ✅ Proper `this` binding and `arguments`
+- ✅ `try`/`catch`/`finally`, `throw`
+- ✅ `typeof`, `instanceof`, `in`, `delete`
 
-**ES6+ via Transformation**:
-- Arrow functions, classes, template literals
-- `let`/`const`, destructuring, spread
-- Default parameters, computed properties
-- Async/await (full support via regenerator)
-- TypeScript and JSX (optional)
+### ES6+ via Transformation (See [ES6+ Transformation](#es6-transformation))
+- ✅ Classes, arrow functions, template literals
+- ✅ `let`/`const`, destructuring, spread operators
+- ✅ Default parameters, computed properties
+- ✅ Async/await (full support)
+- ✅ TypeScript and JSX (optional)
 
-**Not Supported**:
-- Generators (complex state machine, work in progress)
-- ES6 modules (use bundler instead)
+### Not Supported
+- ❌ Generators (work in progress)
+- ❌ ES6 modules (use bundler instead)
+- ❌ Proxies, Reflect, WeakRef
+- ❌ SharedArrayBuffer, Atomics
 
 ## Performance
 
