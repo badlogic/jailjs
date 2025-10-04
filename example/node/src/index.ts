@@ -1,4 +1,5 @@
 import { Interpreter, parse } from "@mariozechner/jailjs";
+import { transformToES5 } from "@mariozechner/jailjs/transform";
 
 console.log("JailJS - Node.js Example");
 console.log("========================\n");
@@ -78,5 +79,17 @@ eval(code)
 `;
 const evalResult = interpreter.evaluate(parse(evalCode));
 console.log(`   eval('2 + 2') = ${evalResult}\n`);
+
+// Example 6: ES6+ transformation
+console.log("6. ES6+ transformation:");
+const es6Code = `
+const arrow = (x) => x * 2;
+const numbers = [1, 2, 3];
+const doubled = numbers.map(arrow);
+doubled.join(', ')
+`;
+const es6Ast = transformToES5(es6Code);
+const es6Result = interpreter.evaluate(es6Ast);
+console.log(`   Arrow function + const: ${es6Result}\n`);
 
 console.log("All examples completed successfully!");
