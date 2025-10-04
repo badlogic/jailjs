@@ -38,12 +38,16 @@ See the [example](example/) folder for complete demonstrations:
 
 ## Default Environment
 
-The interpreter exposes these globals by default (see [interpreter.ts:54-100](src/interpreter.ts#L54-L100)):
+The interpreter exposes these globals by default, with **frozen built-ins** to prevent mutation:
 
 ```typescript
-// Safe built-ins
-console, Math, Date, JSON, RegExp
-Array, Object, String, Number, Boolean
+// Frozen built-ins (cannot be modified by sandboxed code)
+console: { log, error, warn, info, debug }  // Frozen copy
+Math: { ...all Math methods }              // Frozen copy
+JSON: { parse, stringify }                 // Frozen copy
+
+// Constructors (⚠️ prototypes can still be polluted)
+Date, RegExp, Array, Object, String, Number, Boolean
 
 // ES6+ features (for transformed code)
 Symbol, Promise
@@ -60,14 +64,25 @@ Function: undefined  // Blocked to prevent sandbox escape
 eval: (code) => ...  // Re-implemented through interpreter (requires parser injection)
 ```
 
-Extend by passing custom globals:
+Override or extend by passing custom globals:
 
 ```typescript
+// Replace frozen built-ins with custom implementations
 const interpreter = new Interpreter({
-  console: { log: (...args) => console.log('[Sandbox]', ...args) },
-  document: document, // This breaks sandbox but gives DOM access
+  console: { log: (...args) => myLogger('[Sandbox]', ...args) },
+  Math: Math, // Pass original (mutable) Math if needed
+});
+
+// Add new globals (frozen by default is safer)
+const interpreter = new Interpreter({
+  document: Object.freeze(document), // Freeze to prevent mutation
+  myAPI: Object.freeze({
+    getData: () => safeFetchData()
+  })
 });
 ```
+
+**Security Note**: While `Math`, `JSON`, and `console` are frozen by default, constructor prototypes (like `Array.prototype`) can still be polluted. For mission-critical security, use a whitelist-based sandbox like [SandboxJS](https://github.com/nyariv/SandboxJS).
 
 ## Tree-shaking for Smaller Bundles
 
@@ -206,33 +221,39 @@ The transform module uses `@babel/standalone` and is tree-shakeable - only inclu
 
 ### Known Limitations
 
-❌ **Shared object references**: Built-ins like `Math`, `Object`, `Array` are passed by reference and can be mutated
+❌ **Prototype pollution possible**: Constructor prototypes (like `Array.prototype`) can still be mutated
 ❌ **No prototype whitelist**: Any method on built-in prototypes can be accessed
 ❌ **No advanced jailbreak protection**: Determined attackers may find bypass techniques
 ❌ **No memory limits**: Can allocate unlimited objects/arrays until system limits
 ❌ **Simple operation counter**: `maxOps` is a basic counter, not a comprehensive execution quota
 
+### What's Protected by Default
+
+✅ **Frozen built-ins**: `Math`, `JSON`, and `console` are frozen and cannot be mutated
+✅ **Function constructor blocked**: `Function()` is `undefined` to prevent code execution
+✅ **eval() sandboxed**: When enabled, `eval()` runs through the interpreter
+
 ### Recommendations for Safer Use
 
 ```typescript
-// 1. Set operation limits
+// 1. Set operation limits (important!)
 const interpreter = new Interpreter({}, {
   maxOps: 100000,  // Prevent infinite loops
   parse: parse     // Only if you need eval()
 });
 
-// 2. Provide frozen/cloned built-ins to prevent mutation
-const safeMath = Object.freeze({ ...Math });
+// 2. Freeze custom globals you provide
 const interpreter = new Interpreter({
-  Math: safeMath,
-  console: {
-    log: (...args) => console.log('[Sandboxed]', ...args)
-  }
+  document: Object.freeze(document), // Prevent mutation
+  myAPI: Object.freeze({
+    getData: () => safeFetchData()
+  })
 });
 
 // 3. Minimize provided globals - only give what's needed
 const interpreter = new Interpreter({
-  // Minimal set - don't include Object, Array, etc. unless required
+  // Minimal set - defaults are already frozen
+  // Don't add Array, Object unless required
 });
 
 // 4. For production, layer additional security:
