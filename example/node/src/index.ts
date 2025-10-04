@@ -83,13 +83,26 @@ console.log(`   eval('2 + 2') = ${evalResult}\n`);
 // Example 6: ES6+ transformation
 console.log("6. ES6+ transformation:");
 const es6Code = `
-const arrow = (x) => x * 2;
-const numbers = [1, 2, 3];
-const doubled = numbers.map(arrow);
-doubled.join(', ')
+class Calculator {
+  constructor(initial = 0) {
+    this.value = initial;
+  }
+
+  add(...numbers) {
+    this.value += numbers.reduce((sum, n) => sum + n, 0);
+    return this.value;
+  }
+}
+
+const calc = new Calculator(10);
+const result = calc.add(5, 3, 2);
+const [a, b, c] = [1, 2, 3];
+const obj = { result, sum: a + b + c };
+
+JSON.stringify(obj)
 `;
 const es6Ast = transformToES5(es6Code);
 const es6Result = interpreter.evaluate(es6Ast);
-console.log(`   Arrow function + const: ${es6Result}\n`);
+console.log(`   ES6+ (classes, spread, destructuring): ${es6Result}\n`);
 
 console.log("All examples completed successfully!");

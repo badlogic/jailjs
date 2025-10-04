@@ -35,12 +35,28 @@ evens.reduce(function(sum, x) {
   return sum + x;
 }, 0)`,
 
-   es6: `// ES6+ code that gets transformed to ES5
-const arrow = (x) => x * 2;
-const numbers = [1, 2, 3];
-const doubled = numbers.map(arrow);
+   es6: `// ES6+ features transformed to ES5
+class Counter {
+  constructor(start = 0) {
+    this.value = start;
+  }
 
-'Result: ' + doubled.join(', ')`,
+  increment() {
+    return ++this.value;
+  }
+}
+
+const counter = new Counter(10);
+const numbers = [1, 2, 3];
+const doubled = numbers.map(x => x * 2);
+const [first, ...rest] = doubled;
+
+JSON.stringify({
+  counter: counter.increment(),
+  first,
+  rest,
+  total: [...rest].reduce((a, b) => a + b, 0)
+})`,
 };
 
 const codeTextarea = document.getElementById("code") as HTMLTextAreaElement;

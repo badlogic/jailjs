@@ -86,6 +86,10 @@ export class Interpreter {
             decodeURI,
             decodeURIComponent,
 
+            // Minimal Symbol polyfill for Babel-transformed code
+            // Note: Only provides the bare minimum for typeof checks to work
+            Symbol: typeof Symbol !== "undefined" ? Symbol : undefined,
+
             // Block dangerous functions or re-interpret
             Function: undefined,
             eval: (code: string) => {
@@ -442,12 +446,8 @@ export class Interpreter {
                   : (node.left.property as t.Identifier).name;
 
                if (node.operator === "=") {
-                  // Wrap interpreted functions for callbacks
-                  if (value && (value as any).__interpreted) {
-                     obj[prop] = (...args: any[]) => this.callFunction(value, args, scope);
-                  } else {
-                     obj[prop] = value;
-                  }
+                  // Store value directly (interpreted functions will be handled by CallExpression)
+                  obj[prop] = value;
                } else {
                   const oldValue = obj[prop];
                   obj[prop] = this.applyAssignmentOperator(oldValue, value, node.operator);
@@ -476,9 +476,19 @@ export class Interpreter {
             const obj = this.evalNode(node.object, scope);
             const prop = node.computed ? this.evalNode(node.property, scope) : (node.property as t.Identifier).name;
 
-            // Block prototype pollution
-            if (prop === "__proto__" || prop === "constructor" || prop === "prototype") {
+            // Block prototype pollution via __proto__
+            if (prop === "__proto__") {
                return undefined;
+            }
+
+            // Block modification of built-in constructors (but allow user functions)
+            if (prop === "constructor" && obj !== null && obj !== undefined) {
+               const isBuiltIn = [Object, Array, String, Number, Boolean, Function, RegExp, Date, Error].includes(
+                  obj.constructor,
+               );
+               if (isBuiltIn) {
+                  return undefined;
+               }
             }
 
             return obj[prop];
@@ -514,6 +524,18 @@ export class Interpreter {
          case "NewExpression": {
             const constructorFunc = this.evalNode(node.callee, scope);
             const args = node.arguments.map((arg) => this.evalNode(arg, scope));
+
+            // Handle interpreted functions used as constructors
+            if (constructorFunc && (constructorFunc as any).__interpreted) {
+               // Create new instance with prototype chain
+               const instance = Object.create((constructorFunc as any).prototype || {});
+               // Call constructor with instance as 'this'
+               const result = this.callFunction(constructorFunc, args, scope, instance);
+               // If constructor returns an object, use that; otherwise use instance
+               return result !== undefined && typeof result === "object" ? result : instance;
+            }
+
+            // Native constructor
             return new constructorFunc(...args);
          }
 
@@ -832,13 +854,20 @@ export class Interpreter {
       node: t.FunctionDeclaration | t.FunctionExpression | t.ArrowFunctionExpression | t.ObjectMethod,
       closureScope: Scope,
    ): InterpretedFunction {
-      return {
+      const func: any = {
          __interpreted: true,
          params: node.params.filter((p): p is t.Identifier => p.type === "Identifier"),
          body: node.body,
          closure: closureScope,
          name: "id" in node && node.id ? node.id.name : undefined,
       };
+
+      // Add prototype property for regular functions (not arrow functions)
+      if (node.type !== "ArrowFunctionExpression") {
+         func.prototype = {};
+      }
+
+      return func;
    }
 
    /**

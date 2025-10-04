@@ -41,7 +41,7 @@ The interpreter exposes these globals by default (see [interpreter.ts:54-100](sr
 ```typescript
 // Safe built-ins
 console, Math, Date, JSON, RegExp
-Array, Object, String, Number, Boolean
+Array, Object, String, Number, Boolean, Symbol
 
 // Error types
 Error, TypeError, ReferenceError, SyntaxError, RangeError, EvalError, URIError
@@ -54,6 +54,8 @@ encodeURI, encodeURIComponent, decodeURI, decodeURIComponent
 Function: undefined  // Blocked to prevent sandbox escape
 eval: (code) => ...  // Re-implemented through interpreter (requires parser injection)
 ```
+
+**Note:** `Symbol` is included to support ES6+ code transformed by Babel (Babel helpers use Symbol for type checks).
 
 Override by passing custom globals:
 

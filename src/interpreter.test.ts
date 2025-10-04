@@ -691,4 +691,144 @@ describe("Interpreter - ES5 Smoke Tests", () => {
          expect(interp.run("1 + 1")).toBe(2);
       });
    });
+
+   describe("ES6+ Transformation Support", () => {
+      it("should support constructors with 'new' keyword on interpreted functions", () => {
+         const interp = new TestInterpreter();
+         const result = interp.run(`
+            function Person(name) {
+               this.name = name;
+            }
+            Person.prototype.greet = function() {
+               return 'Hello, ' + this.name;
+            };
+            var p = new Person('Alice');
+            p.greet();
+         `);
+         expect(result).toBe("Hello, Alice");
+      });
+
+      it("should support prototype property on functions", () => {
+         const interp = new TestInterpreter();
+         const result = interp.run(`
+            function MyClass() {}
+            MyClass.prototype.test = 123;
+            var instance = new MyClass();
+            instance.test;
+         `);
+         expect(result).toBe(123);
+      });
+
+      it("should support Babel loose mode class transformation", () => {
+         const interp = new TestInterpreter();
+         const result = interp.run(`
+            var Calculator = function() {
+               function Calculator() {}
+               var _proto = Calculator.prototype;
+               _proto.add = function add(a, b) {
+                  return a + b;
+               };
+               return Calculator;
+            }();
+            new Calculator().add(1, 2);
+         `);
+         expect(result).toBe(3);
+      });
+
+      it("should support constructor with return value", () => {
+         const interp = new TestInterpreter();
+         const result = interp.run(`
+            function Factory() {
+               return { custom: true };
+            }
+            var obj = new Factory();
+            obj.custom;
+         `);
+         expect(result).toBe(true);
+      });
+
+      it("should support constructor without return value", () => {
+         const interp = new TestInterpreter();
+         const result = interp.run(`
+            function Person(name) {
+               this.name = name;
+            }
+            var p = new Person('Bob');
+            p.name;
+         `);
+         expect(result).toBe("Bob");
+      });
+
+      it("should handle method calls with correct 'this' context", () => {
+         const interp = new TestInterpreter();
+         const result = interp.run(`
+            function Counter() {
+               this.count = 0;
+            }
+            Counter.prototype.increment = function() {
+               this.count++;
+               return this.count;
+            };
+            var c = new Counter();
+            c.increment();
+            c.increment();
+         `);
+         expect(result).toBe(2);
+      });
+
+      it("should support callbacks to native functions (DOM-style)", () => {
+         // Simulate a DOM-like API that stores and calls callbacks
+         const mockButton = {
+            listeners: [] as any[],
+            addEventListener(event: string, callback: any) {
+               this.listeners.push({ event, callback });
+            },
+            click() {
+               this.listeners.forEach((l) => {
+                  if (l.event === "click") l.callback();
+               });
+            },
+         };
+
+         const interp = new TestInterpreter({ button: mockButton });
+         interp.run(`
+            var clicked = false;
+            button.addEventListener('click', function() {
+               clicked = true;
+            });
+         `);
+
+         mockButton.click();
+         const result = interp.run("clicked");
+         expect(result).toBe(true);
+      });
+
+      it("should support Symbol in default environment", () => {
+         const interp = new TestInterpreter();
+         const result = interp.run(`
+            typeof Symbol;
+         `);
+         expect(result).toBe("function");
+      });
+
+      it("should allow setting methods on prototype", () => {
+         const interp = new TestInterpreter();
+         const result = interp.run(`
+            function MyClass() {}
+            MyClass.prototype.method = function() { return 42; };
+            var obj = new MyClass();
+            obj.method();
+         `);
+         expect(result).toBe(42);
+      });
+
+      it("should block __proto__ access", () => {
+         const interp = new TestInterpreter();
+         const result = interp.run(`
+            var obj = {};
+            obj.__proto__;
+         `);
+         expect(result).toBe(undefined);
+      });
+   });
 });

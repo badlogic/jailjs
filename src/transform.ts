@@ -50,9 +50,13 @@ export function transformToES5(
       [
          "env",
          {
-            targets: options.targets || { ie: 11 },
+            targets: options.targets || { ie: 9 }, // IE9 = pure ES5, no Symbol
             // Don't add polyfills, just transform syntax
             useBuiltIns: false,
+            // Force all transforms, no native ES6+ features
+            forceAllTransforms: true,
+            // Use loose mode for simpler ES5 output without Object.defineProperty
+            loose: true,
          },
       ],
    ];
@@ -71,6 +75,15 @@ export function transformToES5(
          filename: "script.js",
          ast: true,
          code: false,
+         // Babel assumptions for pure ES5 output
+         assumptions: {
+            noDocumentAll: true,
+            noClassCalls: true,
+            iterableIsArray: true,
+            objectRestNoSymbols: true,
+            setSpreadProperties: true,
+            skipForOfIteratorClosing: true,
+         },
       });
 
       if (!result?.ast?.program) {
