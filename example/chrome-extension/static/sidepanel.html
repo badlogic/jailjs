@@ -17,13 +17,30 @@
       <label for="code" class="block text-sm font-medium text-gray-700 mb-2">JavaScript Code</label>
       <textarea
         id="code"
-        class="w-full h-64 font-mono text-sm border border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-y"
+        class="w-full h-48 font-mono text-sm border border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-y"
         placeholder="Enter JavaScript code to execute..."
       >document.title</textarea>
-      <button
-        id="execute"
-        class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
-      >Execute</button>
+
+      <div class="mt-4 grid grid-cols-3 gap-2">
+        <button
+          id="execute-jailjs"
+          class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors text-sm"
+        >JailJS Sandbox</button>
+        <button
+          id="execute-eval"
+          class="bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-4 rounded-md transition-colors text-sm"
+        >eval()</button>
+        <button
+          id="execute-script"
+          class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md transition-colors text-sm"
+        >&lt;script&gt;</button>
+      </div>
+
+      <div class="mt-3 text-xs text-gray-500 space-y-1">
+        <div><span class="font-semibold text-blue-600">JailJS:</span> Sandboxed interpreter, works everywhere</div>
+        <div><span class="font-semibold text-orange-600">eval():</span> May fail due to CSP on some sites</div>
+        <div><span class="font-semibold text-purple-600">&lt;script&gt;:</span> Injects into page context, shares page globals</div>
+      </div>
     </div>
 
     <div id="result" class="hidden bg-white rounded-lg shadow-sm p-6">

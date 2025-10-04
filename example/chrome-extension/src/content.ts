@@ -39,17 +39,53 @@ console.log("[JailJS] Interpreter initialized with parser");
 // Listen for code execution requests from side panel
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
    if (message.type === "EXECUTE_CODE") {
-      console.log("[JailJS] Executing code:", message.code);
+      const mode = message.mode || "jailjs";
+      console.log(`[${mode}] Executing code:`, message.code);
 
       try {
-         // Parse and execute the code
-         const ast = parse(message.code);
-         const result = interpreter.evaluate(ast);
+         let result: any;
 
-         console.log("[JailJS] Execution result:", result);
+         if (mode === "jailjs") {
+            // JailJS sandboxed execution
+            const ast = parse(message.code);
+            result = interpreter.evaluate(ast);
+         } else if (mode === "eval") {
+            // Native eval() - may be blocked by CSP
+            // biome-ignore lint/security/noGlobalEval: Intentional for demonstration purposes
+            result = eval(message.code);
+         } else if (mode === "script") {
+            // Inject <script> into page context
+            const script = document.createElement("script");
+            script.textContent = `
+               (function() {
+                  try {
+                     const __result = ${message.code};
+                     document.body.dataset.__extensionResult = JSON.stringify(__result);
+                  } catch (e) {
+                     document.body.dataset.__extensionError = e.message;
+                  }
+               })();
+            `;
+            document.documentElement.appendChild(script);
+            script.remove();
+
+            // Read result from page context
+            if (document.body.dataset.__extensionError) {
+               const error = document.body.dataset.__extensionError;
+               delete document.body.dataset.__extensionError;
+               throw new Error(error);
+            }
+
+            result = document.body.dataset.__extensionResult
+               ? JSON.parse(document.body.dataset.__extensionResult)
+               : undefined;
+            delete document.body.dataset.__extensionResult;
+         }
+
+         console.log(`[${mode}] Execution result:`, result);
          sendResponse({ success: true, result: result });
       } catch (error: any) {
-         console.error("[JailJS] Execution error:", error);
+         console.error(`[${mode}] Execution error:`, error);
          sendResponse({
             success: false,
             error: error.message,

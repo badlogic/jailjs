@@ -35,7 +35,9 @@ if (body.style.filter === 'invert(1) hue-rotate(180deg)') {
 };
 
 const codeTextarea = document.getElementById("code") as HTMLTextAreaElement;
-const executeButton = document.getElementById("execute") as HTMLButtonElement;
+const executeJailJSButton = document.getElementById("execute-jailjs") as HTMLButtonElement;
+const executeEvalButton = document.getElementById("execute-eval") as HTMLButtonElement;
+const executeScriptButton = document.getElementById("execute-script") as HTMLButtonElement;
 const resultDiv = document.getElementById("result") as HTMLDivElement;
 const resultContent = document.getElementById("result-content") as HTMLPreElement;
 
@@ -49,7 +51,16 @@ document.querySelectorAll(".example-btn").forEach((btn) => {
    });
 });
 
-executeButton.addEventListener("click", async () => {
+// Execute with JailJS sandbox
+executeJailJSButton.addEventListener("click", () => executeCode("jailjs"));
+
+// Execute with eval()
+executeEvalButton.addEventListener("click", () => executeCode("eval"));
+
+// Execute with <script> injection
+executeScriptButton.addEventListener("click", () => executeCode("script"));
+
+async function executeCode(mode: "jailjs" | "eval" | "script") {
    const code = codeTextarea.value.trim();
 
    if (!code) {
@@ -57,8 +68,10 @@ executeButton.addEventListener("click", async () => {
       return;
    }
 
-   executeButton.disabled = true;
-   executeButton.textContent = "Executing...";
+   const button = mode === "jailjs" ? executeJailJSButton : mode === "eval" ? executeEvalButton : executeScriptButton;
+
+   button.disabled = true;
+   button.textContent = "Executing...";
 
    try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -71,6 +84,7 @@ executeButton.addEventListener("click", async () => {
       try {
          response = await chrome.tabs.sendMessage(tab.id, {
             type: "EXECUTE_CODE",
+            mode: mode,
             code: code,
          });
       } catch (_error) {
@@ -84,12 +98,14 @@ executeButton.addEventListener("click", async () => {
 
          response = await chrome.tabs.sendMessage(tab.id, {
             type: "EXECUTE_CODE",
+            mode: mode,
             code: code,
          });
       }
 
       if (response.success) {
-         showResult(formatResult(response.result), true);
+         const modeLabel = mode === "jailjs" ? "[JailJS]" : mode === "eval" ? "[eval()]" : "[<script>]";
+         showResult(`${modeLabel} ${formatResult(response.result)}`, true);
       } else {
          showResult(`Error: ${response.error}\n\n${response.stack || ""}`, false);
       }
@@ -104,10 +120,10 @@ executeButton.addEventListener("click", async () => {
 
       showResult(`Error: ${errorMsg}`, false);
    } finally {
-      executeButton.disabled = false;
-      executeButton.textContent = "Execute";
+      button.disabled = false;
+      button.textContent = mode === "jailjs" ? "JailJS Sandbox" : mode === "eval" ? "eval()" : "<script>";
    }
-});
+}
 
 function formatResult(result: any): string {
    if (result === undefined) return "undefined";
@@ -134,6 +150,6 @@ function showResult(message: string, success: boolean) {
 codeTextarea.addEventListener("keydown", (e) => {
    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
-      executeButton.click();
+      executeJailJSButton.click();
    }
 });

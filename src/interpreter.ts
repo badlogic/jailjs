@@ -844,7 +844,7 @@ export class Interpreter {
    /**
     * Call an interpreted function
     */
-   private callFunction(func: any, args: any[], callerScope: Scope, thisContext?: any): any {
+   private callFunction(func: any, args: any[], _callerScope: Scope, thisContext?: any): any {
       if (!func || !func.__interpreted) {
          throw new TypeError("Value is not a function");
       }
