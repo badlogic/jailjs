@@ -60,7 +60,21 @@ fibonacci(10)</textarea>
                   <div class="font-medium text-sm text-gray-900">Async/Await</div>
                   <div class="text-xs text-gray-500 mt-1">Promises and async functions</div>
                </button>
+               <button class="example-btn text-left px-4 py-3 bg-red-50 hover:bg-red-100 rounded-md border-2 border-red-300 transition-colors" data-name="danger">
+                  <div class="font-medium text-sm text-red-900">⚠️ Prototype Attack</div>
+                  <div class="text-xs text-red-600 mt-1">SECURITY DEMO - Shows why JailJS is NOT safe for LLM code</div>
+               </button>
             </div>
+         </div>
+
+         <div id="attack-demo" class="hidden bg-red-50 rounded-lg shadow-sm p-6 border-2 border-red-300">
+            <h2 class="text-sm font-medium text-red-900 mb-2">🚨 Attack Demonstration</h2>
+            <p class="text-sm text-red-700 mb-4">The sandboxed code polluted Array.prototype. Now watch what happens when <strong>this app's own code</strong> (outside the sandbox) tries to use arrays:</p>
+            <button
+               id="test-attack"
+               class="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
+            >Test Attack: Run App's Own Code</button>
+            <p class="text-xs text-red-600 mt-3">This demonstrates why you MUST use SandboxJS or isolated workers for LLM/untrusted code!</p>
          </div>
       </div>
 

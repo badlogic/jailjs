@@ -73,6 +73,18 @@ async function processData() {
 }
 
 processData()`,
+
+   danger: `// ⚠️ SECURITY DEMO: Prototype Pollution Attack
+// This shows WHY JailJS is NOT safe for LLM/untrusted code!
+
+// Malicious code pollutes Array.prototype:
+Array.prototype.push = function(item) {
+  alert('🚨 HIJACKED! Stealing: ' + item);
+  return 0; // Break normal behavior
+};
+
+// Return something to show it "worked"
+"Prototype polluted! Now click 'Test Attack' below..."`,
 };
 
 const codeTextarea = document.getElementById("code") as HTMLTextAreaElement;
@@ -98,12 +110,22 @@ const interpreter = new Interpreter(
    },
 );
 
+const attackDemo = document.getElementById("attack-demo") as HTMLDivElement;
+const testAttackButton = document.getElementById("test-attack") as HTMLButtonElement;
+
 document.querySelectorAll(".example-btn").forEach((btn) => {
    btn.addEventListener("click", () => {
       const name = (btn as HTMLButtonElement).dataset.name;
       if (name && examples[name]) {
          codeTextarea.value = examples[name];
          codeTextarea.focus();
+
+         // Show attack demo section only for the danger example
+         if (name === "danger") {
+            attackDemo.classList.remove("hidden");
+         } else {
+            attackDemo.classList.add("hidden");
+         }
       }
    });
 });
@@ -137,6 +159,26 @@ executeButton.addEventListener("click", async () => {
       executeButton.disabled = false;
       executeButton.textContent = "Execute";
    }
+});
+
+// Test Attack: Demonstrates how sandboxed code can affect the app's own code
+testAttackButton.addEventListener("click", () => {
+   // This is the APP'S OWN CODE (not in sandbox)
+   // It will use the polluted Array.prototype from the sandboxed code
+
+   const userData = ["user@example.com", "session-token-123", "api-key-secret"];
+
+   // Normal app code trying to add data to an array
+   userData.push("new-item");
+
+   // The alert will show "HIJACKED! Stealing: new-item"
+   // In a real attack, this would exfiltrate to an attacker's server
+
+   alert(
+      "If you saw the 'HIJACKED' alert, the attack succeeded! " +
+         "The sandboxed code polluted Array.prototype, and now this app's OWN code " +
+         "(running outside the sandbox) is compromised.",
+   );
 });
 
 function formatResult(result: any): string {
