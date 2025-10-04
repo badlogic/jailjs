@@ -86,9 +86,9 @@ export class Interpreter {
             decodeURI,
             decodeURIComponent,
 
-            // Minimal Symbol polyfill for Babel-transformed code
-            // Note: Only provides the bare minimum for typeof checks to work
+            // ES6+ features needed for transformed code
             Symbol: typeof Symbol !== "undefined" ? Symbol : undefined,
+            Promise: typeof Promise !== "undefined" ? Promise : undefined,
 
             // Block dangerous functions or re-interpret
             Function: undefined,
@@ -350,8 +350,23 @@ export class Interpreter {
                   return left ^ right;
                case "in":
                   return left in right;
-               case "instanceof":
+               case "instanceof": {
+                  // Handle instanceof for both native and interpreted functions
+                  if ((right as any).__interpreted) {
+                     // Right side is an interpreted function - check prototype chain
+                     const proto = (right as any).prototype;
+                     if (!proto) return false;
+
+                     let obj = left;
+                     while (obj != null) {
+                        if (obj === proto) return true;
+                        obj = Object.getPrototypeOf(obj);
+                     }
+                     return false;
+                  }
+                  // Native instanceof
                   return left instanceof right;
+               }
                default:
                   throw new Error(`Unknown binary operator: ${node.operator}`);
             }
@@ -535,8 +550,14 @@ export class Interpreter {
                return result !== undefined && typeof result === "object" ? result : instance;
             }
 
-            // Native constructor
-            return new constructorFunc(...args);
+            // Native constructor - wrap interpreted function arguments
+            const wrappedArgs = args.map((arg) => {
+               if (arg && (arg as any).__interpreted) {
+                  return (...callArgs: any[]) => this.callFunction(arg, callArgs, scope);
+               }
+               return arg;
+            });
+            return new constructorFunc(...wrappedArgs);
          }
 
          // Object and array literals
@@ -867,6 +888,42 @@ export class Interpreter {
          func.prototype = {};
       }
 
+      // Add Function.prototype methods: call, apply, bind
+      func.call = (thisArg: any, ...args: any[]) => {
+         return this.callFunction(func, args, closureScope, thisArg);
+      };
+
+      func.apply = (thisArg: any, args: any[] = []) => {
+         return this.callFunction(func, args, closureScope, thisArg);
+      };
+
+      func.bind = (thisArg: any, ...boundArgs: any[]) => {
+         const boundFunc: any = {
+            __interpreted: true,
+            params: func.params,
+            body: func.body,
+            closure: closureScope,
+            name: func.name,
+            __boundThis: thisArg, // Store bound this
+            __boundArgs: boundArgs, // Store bound arguments
+            __originalFunc: func, // Store original function
+         };
+
+         // Bound functions also need call/apply/bind
+         boundFunc.call = (_: any, ...args: any[]) => {
+            return this.callFunction(func, [...boundArgs, ...args], closureScope, thisArg);
+         };
+         boundFunc.apply = (_: any, args: any[] = []) => {
+            return this.callFunction(func, [...boundArgs, ...args], closureScope, thisArg);
+         };
+         boundFunc.bind = (newThisArg: any, ...newBoundArgs: any[]) => {
+            // Bind to the already-bound thisArg, ignore newThisArg
+            return func.bind(thisArg, ...boundArgs, ...newBoundArgs);
+         };
+
+         return boundFunc;
+      };
+
       return func;
    }
 
@@ -878,7 +935,22 @@ export class Interpreter {
          throw new TypeError("Value is not a function");
       }
 
+      // Handle bound functions
+      if (func.__boundThis !== undefined) {
+         // Use bound this and prepend bound arguments
+         thisContext = func.__boundThis;
+         args = [...(func.__boundArgs || []), ...args];
+         func = func.__originalFunc || func;
+      }
+
       const funcScope = this.createScope(func.closure, "function");
+
+      // Bind function name for named function expressions
+      // ES5 spec: "The Identifier in a FunctionExpression can be referenced from
+      // inside the FunctionExpression's FunctionBody"
+      if (func.name) {
+         funcScope.vars[func.name] = func;
+      }
 
       // Hoist declarations in function body
       if (func.body.type === "BlockStatement") {

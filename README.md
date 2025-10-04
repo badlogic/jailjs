@@ -41,7 +41,10 @@ The interpreter exposes these globals by default (see [interpreter.ts:54-100](sr
 ```typescript
 // Safe built-ins
 console, Math, Date, JSON, RegExp
-Array, Object, String, Number, Boolean, Symbol
+Array, Object, String, Number, Boolean
+
+// ES6+ features (for transformed code)
+Symbol, Promise
 
 // Error types
 Error, TypeError, ReferenceError, SyntaxError, RangeError, EvalError, URIError
@@ -54,8 +57,6 @@ encodeURI, encodeURIComponent, decodeURI, decodeURIComponent
 Function: undefined  // Blocked to prevent sandbox escape
 eval: (code) => ...  // Re-implemented through interpreter (requires parser injection)
 ```
-
-**Note:** `Symbol` is included to support ES6+ code transformed by Babel (Babel helpers use Symbol for type checks).
 
 Override by passing custom globals:
 
@@ -184,11 +185,11 @@ function transformToES5(
 - Arrow functions, classes, template literals
 - `let`/`const`, destructuring, spread
 - Default parameters, computed properties
+- Async/await (basic support - return values may be incorrect)
 - TypeScript and JSX (optional)
 
 **Not Supported**:
-- Async/await (requires regenerator-runtime)
-- Generators (requires regenerator-runtime)
+- Generators (complex regenerator state machine)
 - ES6 modules (use bundler instead)
 
 ## Performance

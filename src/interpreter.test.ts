@@ -830,5 +830,64 @@ describe("Interpreter - ES5 Smoke Tests", () => {
          `);
          expect(result).toBe(undefined);
       });
+
+      it("should support named function expressions", () => {
+         const interp = new TestInterpreter();
+         const result = interp.run(`
+            var factorial = function fact(n) {
+               return n <= 1 ? 1 : n * fact(n - 1);
+            };
+            factorial(5);
+         `);
+         expect(result).toBe(120);
+      });
+
+      it("should support Function.prototype.call", () => {
+         const interp = new TestInterpreter();
+         const result = interp.run(`
+            function greet(greeting) {
+               return greeting + ', ' + this.name;
+            }
+            var obj = { name: 'Alice' };
+            greet.call(obj, 'Hello');
+         `);
+         expect(result).toBe("Hello, Alice");
+      });
+
+      it("should support Function.prototype.apply", () => {
+         const interp = new TestInterpreter();
+         const result = interp.run(`
+            function add(a, b) {
+               return a + b;
+            }
+            add.apply(null, [1, 2]);
+         `);
+         expect(result).toBe(3);
+      });
+
+      it("should support Function.prototype.bind", () => {
+         const interp = new TestInterpreter();
+         const result = interp.run(`
+            function greet(greeting) {
+               return greeting + ', ' + this.name;
+            }
+            var obj = { name: 'Bob' };
+            var boundGreet = greet.bind(obj);
+            boundGreet('Hi');
+         `);
+         expect(result).toBe("Hi, Bob");
+      });
+
+      it("should support instanceof with interpreted functions", () => {
+         const interp = new TestInterpreter();
+         const result = interp.run(`
+            function Parent() {}
+            function Child() {}
+            Child.prototype = Object.create(Parent.prototype);
+            var child = new Child();
+            child instanceof Child && child instanceof Parent;
+         `);
+         expect(result).toBe(true);
+      });
    });
 });
