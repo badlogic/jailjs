@@ -5,6 +5,7 @@ JavaScript AST interpreter for sandboxed execution in browsers and Node.js.
 ## Features
 
 - **Complete ES5 Support**: Full implementation of all ES5 language features
+- **ES6+ Transformation**: Optional tree-shakeable helper to transform modern JavaScript to ES5
 - **Sandboxed Execution**: Run untrusted code in a controlled environment with custom globals
 - **Tree-shakeable**: Separate parser from interpreter - parse ahead-of-time and bundle only the 10 KB interpreter
 - **Universal**: Works in browsers and Node.js
@@ -83,6 +84,40 @@ interpreter.evaluate(ast);
 
 Bundle size: **10 KB** (interpreter only) vs **310 KB** (interpreter + parser)
 
+## ES6+ Transformation
+
+Transform modern JavaScript to ES5 using the optional `transform` module:
+
+```typescript
+import { Interpreter } from '@mariozechner/jailjs';
+import { transformToES5 } from '@mariozechner/jailjs/transform';
+
+// Transform ES6+ to ES5 AST
+const code = `
+  const arrow = (x) => x * 2;
+  const numbers = [1, 2, 3];
+  const doubled = numbers.map(arrow);
+  \`Result: \${doubled.join(', ')}\`
+`;
+
+const ast = transformToES5(code);
+const interpreter = new Interpreter();
+const result = interpreter.evaluate(ast);
+console.log(result); // "Result: 2, 4, 6"
+```
+
+**Options**:
+
+```typescript
+transformToES5(code, {
+  targets: { ie: 11 },     // Browser targets (default: IE 11)
+  typescript: true,        // Enable TypeScript support
+  jsx: true                // Enable JSX support
+});
+```
+
+The transform module uses `@babel/standalone` and is tree-shakeable - only include it if you need ES6+ support. Note: adds ~3 MB to bundle size.
+
 ## Security
 
 - **Sandboxed**: Custom global environment, no access to host globals unless explicitly provided
@@ -121,6 +156,19 @@ class Interpreter {
 function parse(code: string): Program;
 ```
 
+### `transformToES5`
+
+```typescript
+function transformToES5(
+  code: string,
+  options?: {
+    targets?: Record<string, string | number>;
+    typescript?: boolean;
+    jsx?: boolean;
+  }
+): Program;
+```
+
 ## Supported Features
 
 **ES5 Complete**:
@@ -130,12 +178,11 @@ function parse(code: string): Program;
 - Variable hoisting (var)
 - Proper `this` binding and `arguments`
 
-**Some ES6**:
-- Arrow functions
-- Object spread (`...`)
-- `let`/`const` block scoping
-
-For ES6+ code, transpile to ES5 first.
+**ES6+ via Transformation**:
+- Arrow functions, classes, template literals
+- `let`/`const`, destructuring, spread
+- Async/await, generators, modules
+- TypeScript and JSX (optional)
 
 ## Performance
 

@@ -1,4 +1,5 @@
 import { Interpreter, parse } from "@mariozechner/jailjs";
+import { transformToES5 } from "@mariozechner/jailjs/transform";
 
 const examples: Record<string, string> = {
    fibonacci: `var fibonacci = function(n) {
@@ -34,20 +35,12 @@ evens.reduce(function(sum, x) {
   return sum + x;
 }, 0)`,
 
-   object: `var obj = {
-  name: 'John',
-  age: 30,
-  city: 'NYC'
-};
+   es6: `// ES6+ code that gets transformed to ES5
+const arrow = (x) => x * 2;
+const numbers = [1, 2, 3];
+const doubled = numbers.map(arrow);
 
-var keys = Object.keys(obj);
-var values = Object.values(obj);
-
-JSON.stringify({
-  keys: keys,
-  values: values,
-  count: keys.length
-})`,
+'Result: ' + doubled.join(', ')`,
 };
 
 const codeTextarea = document.getElementById("code") as HTMLTextAreaElement;
@@ -93,7 +86,16 @@ executeButton.addEventListener("click", () => {
    executeButton.textContent = "Executing...";
 
    try {
-      const ast = parse(code);
+      let ast: any;
+
+      // Try ES5 first, if it fails, transform from ES6+
+      try {
+         ast = parse(code);
+      } catch {
+         // Transform ES6+ to ES5 AST
+         ast = transformToES5(code);
+      }
+
       const result = interpreter.evaluate(ast);
       showResult(formatResult(result), true);
    } catch (error: any) {

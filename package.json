@@ -20,6 +20,10 @@
          "types": "./dist/parser.d.ts",
          "import": "./dist/parser.js"
       },
+      "./transform": {
+         "types": "./dist/transform.d.ts",
+         "import": "./dist/transform.js"
+      },
       "./dist/*": "./dist/*"
    },
    "scripts": {
@@ -35,12 +39,12 @@
    },
    "dependencies": {
       "@babel/parser": "^7.26.10",
-      "@babel/preset-env": "^7.28.3",
       "@babel/standalone": "^7.28.4",
       "@babel/types": "^7.26.10"
    },
    "devDependencies": {
       "@biomejs/biome": "^2.2.4",
+      "@types/babel__standalone": "^7.1.9",
       "@types/babel__traverse": "^7.20.6",
       "@types/node": "^24.5.2",
       "@vitest/ui": "^3.2.4",
