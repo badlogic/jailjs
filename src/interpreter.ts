@@ -51,29 +51,15 @@ export class Interpreter {
       this.maxOps = options.maxOps || Infinity;
       this.parse = options.parse;
 
-      // Freeze built-in objects to prevent mutation
-      const frozenMath = Object.freeze({ ...Math });
-      const frozenJSON = Object.freeze({
-         parse: JSON.parse.bind(JSON),
-         stringify: JSON.stringify.bind(JSON),
-      });
-      const frozenConsole = Object.freeze({
-         log: console.log.bind(console),
-         error: console.error.bind(console),
-         warn: console.warn.bind(console),
-         info: console.info.bind(console),
-         debug: console.debug.bind(console),
-      });
-
       this.globalScope = {
          parent: null,
          vars: {
-            // ES5 built-ins (frozen to prevent mutation)
-            console: frozenConsole,
-            Math: frozenMath,
-            JSON: frozenJSON,
+            // ES5 built-ins
+            console,
+            Math,
+            JSON,
 
-            // Constructors (note: prototypes can still be polluted)
+            // Constructors (note: prototypes can be polluted - no protection)
             Date,
             RegExp,
             Array,

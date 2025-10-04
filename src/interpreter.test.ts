@@ -890,30 +890,11 @@ describe("Interpreter - ES5 Smoke Tests", () => {
          expect(result).toBe(true);
       });
 
-      it("should freeze built-in objects by default", () => {
+      it("should allow mutation of built-in objects (no protection)", () => {
          const interp = new TestInterpreter();
 
-         // Math should be frozen
-         expect(() => {
-            interp.run(`Math.random = function() { return 0; };`);
-         }).toThrow(/Cannot (add|set|assign)/);
-
-         // JSON should be frozen
-         expect(() => {
-            interp.run(`JSON.parse = function() { return null; };`);
-         }).toThrow(/Cannot (add|set|assign)/);
-
-         // console should be frozen
-         expect(() => {
-            interp.run(`console.log = function() {};`);
-         }).toThrow(/Cannot (add|set|assign)/);
-      });
-
-      it("should allow user-provided globals to override frozen built-ins", () => {
-         const customInterp = new TestInterpreter({ Math: Math });
-
-         // Should not throw because we passed mutable Math
-         customInterp.run(`Math.customProperty = 42;`);
+         // Built-ins are NOT frozen, can be mutated
+         interp.run(`Math.customProperty = 42;`);
          expect((Math as any).customProperty).toBe(42);
 
          // Clean up
