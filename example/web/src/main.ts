@@ -102,16 +102,8 @@ executeButton.addEventListener("click", () => {
    executeButton.textContent = "Executing...";
 
    try {
-      let ast: any;
-
-      // Try ES5 first, if it fails, transform from ES6+
-      try {
-         ast = parse(code);
-      } catch {
-         // Transform ES6+ to ES5 AST
-         ast = transformToES5(code);
-      }
-
+      // Transform all code to ES5 (handles both ES5 and ES6+ input)
+      const ast = transformToES5(code);
       const result = interpreter.evaluate(ast);
       showResult(formatResult(result), true);
    } catch (error: any) {
