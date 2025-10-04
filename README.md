@@ -183,8 +183,13 @@ function transformToES5(
 **ES6+ via Transformation**:
 - Arrow functions, classes, template literals
 - `let`/`const`, destructuring, spread
-- Async/await, generators, modules
+- Default parameters, computed properties
 - TypeScript and JSX (optional)
+
+**Not Supported**:
+- Async/await (requires regenerator-runtime)
+- Generators (requires regenerator-runtime)
+- ES6 modules (use bundler instead)
 
 ## Performance
 

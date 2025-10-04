@@ -95,4 +95,19 @@ describe("ES6+ Transformation", () => {
       const result = interpreter.evaluate(ast);
       expect(result).toBe(1);
    });
+
+   it("should NOT support async/await (documented limitation)", () => {
+      const code = `
+			async function test() {
+				return 42;
+			}
+			test();
+		`;
+      // Transformation succeeds but creates complex regenerator code
+      const ast = transformToES5(code);
+      const interpreter = new Interpreter();
+
+      // Execution will fail because regenerator-runtime uses Object.defineProperty
+      expect(() => interpreter.evaluate(ast)).toThrow();
+   });
 });
