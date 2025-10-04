@@ -3,19 +3,8 @@
       "enabled": true,
       "rules": {
          "recommended": true,
-         "style": {
-            "noNonNullAssertion": "off",
-            "useConst": "error",
-            "useNodejsImportProtocol": "off",
-            "useTemplate": "off"
-         },
-         "correctness": {
-            "noUnusedVariables": "off"
-         },
          "suspicious": {
-            "noExplicitAny": "off",
-            "noControlCharactersInRegex": "off",
-            "noEmptyInterface": "off"
+            "noExplicitAny": "off"
          }
       }
    },

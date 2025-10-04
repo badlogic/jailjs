@@ -3,56 +3,62 @@
    <head>
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <title>JailJS - Web Example</title>
-      <style>
-         * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-         }
-
-         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            padding: 2rem;
-            line-height: 1.6;
-         }
-
-         h1 {
-            margin-bottom: 1rem;
-         }
-
-         #app {
-            max-width: 800px;
-            margin: 0 auto;
-         }
-
-         .example {
-            margin: 2rem 0;
-            padding: 1rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-         }
-
-         .example h2 {
-            margin-bottom: 0.5rem;
-            font-size: 1.2rem;
-         }
-
-         .output {
-            background: #f5f5f5;
-            padding: 1rem;
-            border-radius: 4px;
-            margin-top: 0.5rem;
-            font-family: monospace;
-         }
-      </style>
+      <title>JailJS - Web Playground</title>
+      <link rel="stylesheet" href="/src/app.css" />
    </head>
-   <body>
-      <div id="app">
-         <h1>JailJS - Web Example</h1>
-         <p>JavaScript AST interpreter for sandboxed execution</p>
-         <div id="examples"></div>
+   <body class="min-h-screen bg-gray-50">
+      <div class="max-w-4xl mx-auto p-6 space-y-6">
+         <div class="bg-white rounded-lg shadow-sm p-6">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">JailJS Playground</h1>
+            <p class="text-gray-600">Execute JavaScript safely in a sandboxed environment</p>
+         </div>
+
+         <div class="bg-white rounded-lg shadow-sm p-6">
+            <label for="code" class="block text-sm font-medium text-gray-700 mb-2">JavaScript Code</label>
+            <textarea
+               id="code"
+               class="w-full h-64 font-mono text-sm border border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-y"
+               placeholder="Enter JavaScript code..."
+            >var fibonacci = function(n) {
+  if (n <= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+};
+
+fibonacci(10)</textarea>
+            <button
+               id="execute"
+               class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
+            >Execute</button>
+         </div>
+
+         <div id="result" class="hidden bg-white rounded-lg shadow-sm p-6">
+            <h2 class="text-sm font-medium text-gray-700 mb-2">Result</h2>
+            <pre id="result-content" class="font-mono text-sm whitespace-pre-wrap break-all"></pre>
+         </div>
+
+         <div class="bg-white rounded-lg shadow-sm p-6">
+            <h2 class="text-sm font-medium text-gray-700 mb-3">Examples</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+               <button class="example-btn text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-md border border-gray-200 transition-colors" data-name="fibonacci">
+                  <div class="font-medium text-sm text-gray-900">Fibonacci</div>
+                  <div class="text-xs text-gray-500 mt-1">Recursive function</div>
+               </button>
+               <button class="example-btn text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-md border border-gray-200 transition-colors" data-name="closure">
+                  <div class="font-medium text-sm text-gray-900">Closure</div>
+                  <div class="text-xs text-gray-500 mt-1">Counter with private state</div>
+               </button>
+               <button class="example-btn text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-md border border-gray-200 transition-colors" data-name="array">
+                  <div class="font-medium text-sm text-gray-900">Array Methods</div>
+                  <div class="text-xs text-gray-500 mt-1">Map, filter, reduce</div>
+               </button>
+               <button class="example-btn text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-md border border-gray-200 transition-colors" data-name="object">
+                  <div class="font-medium text-sm text-gray-900">Object Methods</div>
+                  <div class="text-xs text-gray-500 mt-1">Keys, values, iteration</div>
+               </button>
+            </div>
+         </div>
       </div>
+
       <script type="module" src="/src/main.ts"></script>
    </body>
 </html>

@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "JailJS Example - Manifest V3",
+  "version": "1.0.0",
+  "description": "Execute JavaScript safely in sandboxed context using JailJS interpreter (Manifest V3)",
+
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+
+  "sidebar_action": {
+    "default_title": "JailJS",
+    "default_panel": "sidepanel.html"
+  },
+
+  "action": {
+    "default_title": "Open JailJS Sidebar"
+  },
+
+  "background": {
+    "scripts": ["background.js"]
+  },
+
+  "content_scripts": [{
+    "matches": ["<all_urls>"],
+    "js": ["content.js"],
+    "run_at": "document_idle"
+  }],
+
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "jailjs@mariozechner.at"
+    }
+  }
+}

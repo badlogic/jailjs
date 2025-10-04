@@ -1,20 +1,134 @@
-import { Jail } from "@mariozechner/jailjs";
+import { Interpreter, parse } from "@mariozechner/jailjs";
 
-// Example placeholder
-const examplesDiv = document.getElementById("examples");
+const examples: Record<string, string> = {
+   fibonacci: `var fibonacci = function(n) {
+  if (n <= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+};
 
-if (examplesDiv) {
-   const example = document.createElement("div");
-   example.className = "example";
-   example.innerHTML = `
-      <h2>Example 1: Basic Usage</h2>
-      <div class="output">
-         <pre>TODO: Implement JailJS demo</pre>
-      </div>
-   `;
-   examplesDiv.appendChild(example);
+fibonacci(10)`,
 
-   // Test that Jail class is available
-   const jail = new Jail();
-   console.log("JailJS initialized:", jail);
+   closure: `var makeCounter = function() {
+  var count = 0;
+  return function() {
+    return ++count;
+  };
+};
+
+var counter = makeCounter();
+counter(); // 1
+counter(); // 2
+counter()  // 3`,
+
+   array: `var numbers = [1, 2, 3, 4, 5];
+
+var doubled = numbers.map(function(x) {
+  return x * 2;
+});
+
+var evens = doubled.filter(function(x) {
+  return x % 2 === 0;
+});
+
+evens.reduce(function(sum, x) {
+  return sum + x;
+}, 0)`,
+
+   object: `var obj = {
+  name: 'John',
+  age: 30,
+  city: 'NYC'
+};
+
+var keys = Object.keys(obj);
+var values = Object.values(obj);
+
+JSON.stringify({
+  keys: keys,
+  values: values,
+  count: keys.length
+})`,
+};
+
+const codeTextarea = document.getElementById("code") as HTMLTextAreaElement;
+const executeButton = document.getElementById("execute") as HTMLButtonElement;
+const resultDiv = document.getElementById("result") as HTMLDivElement;
+const resultContent = document.getElementById("result-content") as HTMLPreElement;
+
+const interpreter = new Interpreter(
+   {
+      console: {
+         log: (...args: any[]) => console.log("[Sandbox]", ...args),
+      },
+      Math: Math,
+      JSON: JSON,
+      Date: Date,
+      Object: Object,
+      Array: Array,
+   },
+   {
+      parse: parse,
+   },
+);
+
+document.querySelectorAll(".example-btn").forEach((btn) => {
+   btn.addEventListener("click", () => {
+      const name = (btn as HTMLButtonElement).dataset.name;
+      if (name && examples[name]) {
+         codeTextarea.value = examples[name];
+         codeTextarea.focus();
+      }
+   });
+});
+
+executeButton.addEventListener("click", () => {
+   const code = codeTextarea.value.trim();
+
+   if (!code) {
+      showResult("Please enter some code", false);
+      return;
+   }
+
+   executeButton.disabled = true;
+   executeButton.textContent = "Executing...";
+
+   try {
+      const ast = parse(code);
+      const result = interpreter.evaluate(ast);
+      showResult(formatResult(result), true);
+   } catch (error: any) {
+      showResult(`Error: ${error.message}\n\n${error.stack || ""}`, false);
+   } finally {
+      executeButton.disabled = false;
+      executeButton.textContent = "Execute";
+   }
+});
+
+function formatResult(result: any): string {
+   if (result === undefined) return "undefined";
+   if (result === null) return "null";
+   if (typeof result === "string") return result;
+   if (typeof result === "object") {
+      try {
+         return JSON.stringify(result, null, 2);
+      } catch {
+         return String(result);
+      }
+   }
+   return String(result);
 }
+
+function showResult(message: string, success: boolean) {
+   resultDiv.classList.remove("hidden");
+   resultContent.textContent = message;
+   resultContent.className = success
+      ? "font-mono text-sm text-green-700 whitespace-pre-wrap break-all"
+      : "font-mono text-sm text-red-700 whitespace-pre-wrap break-all";
+}
+
+codeTextarea.addEventListener("keydown", (e) => {
+   if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      executeButton.click();
+   }
+});

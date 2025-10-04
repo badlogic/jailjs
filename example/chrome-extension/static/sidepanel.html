@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JailJS</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body class="min-h-screen bg-gray-50">
+  <div class="max-w-4xl mx-auto p-6 space-y-6">
+    <div class="bg-white rounded-lg shadow-sm p-6">
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">JailJS Sandbox</h1>
+      <p class="text-sm text-gray-600">Execute JavaScript safely in an isolated world (Manifest V3)</p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm p-6">
+      <label for="code" class="block text-sm font-medium text-gray-700 mb-2">JavaScript Code</label>
+      <textarea
+        id="code"
+        class="w-full h-64 font-mono text-sm border border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-y"
+        placeholder="Enter JavaScript code to execute..."
+      >document.title</textarea>
+      <button
+        id="execute"
+        class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
+      >Execute</button>
+    </div>
+
+    <div id="result" class="hidden bg-white rounded-lg shadow-sm p-6">
+      <h2 class="text-sm font-medium text-gray-700 mb-2">Result</h2>
+      <pre id="result-content" class="font-mono text-sm text-gray-900 whitespace-pre-wrap break-all"></pre>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm p-6">
+      <h2 class="text-sm font-medium text-gray-700 mb-3">Example Scripts</h2>
+      <div class="grid grid-cols-1 gap-2">
+        <button class="example-btn text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-md border border-gray-200 transition-colors" data-name="Get Page Title">
+          <div class="font-medium text-sm text-gray-900">Get Page Title</div>
+          <div class="text-xs text-gray-500 mt-1">Returns the current page title</div>
+        </button>
+        <button class="example-btn text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-md border border-gray-200 transition-colors" data-name="Count Links">
+          <div class="font-medium text-sm text-gray-900">Count Links</div>
+          <div class="text-xs text-gray-500 mt-1">Counts all links on the page</div>
+        </button>
+        <button class="example-btn text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-md border border-gray-200 transition-colors" data-name="Highlight Links">
+          <div class="font-medium text-sm text-gray-900">Highlight All Links</div>
+          <div class="text-xs text-gray-500 mt-1">Highlights all links in yellow</div>
+        </button>
+        <button class="example-btn text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-md border border-gray-200 transition-colors" data-name="Remove Images">
+          <div class="font-medium text-sm text-gray-900">Remove All Images</div>
+          <div class="text-xs text-gray-500 mt-1">Removes all images from the page</div>
+        </button>
+        <button class="example-btn text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-md border border-gray-200 transition-colors" data-name="Auto-Scroll">
+          <div class="font-medium text-sm text-gray-900">Auto-Scroll Page</div>
+          <div class="text-xs text-gray-500 mt-1">Smoothly scrolls to the bottom</div>
+        </button>
+        <button class="example-btn text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-md border border-gray-200 transition-colors" data-name="Dark Mode">
+          <div class="font-medium text-sm text-gray-900">Toggle Dark Mode</div>
+          <div class="text-xs text-gray-500 mt-1">Inverts colors for dark mode</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="sidepanel.js"></script>
+</body>
+</html>

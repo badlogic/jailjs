@@ -16,14 +16,18 @@
          "types": "./dist/index.d.ts",
          "import": "./dist/index.js"
       },
+      "./parser": {
+         "types": "./dist/parser.d.ts",
+         "import": "./dist/parser.js"
+      },
       "./dist/*": "./dist/*"
    },
    "scripts": {
-      "build": "tsc",
-      "build:example": "cd example/web && npm run build",
-      "dev": "npm install && cd example/web && npm install && cd ../node && npm install && cd ../.. && concurrently -k \"npm run dev:tsc\" \"npm run dev:example\"",
-      "dev:tsc": "tsc --watch",
-      "dev:example": "cd example/web && npm run dev",
+      "build": "tsc && cd example/web && npm run build && cd ../node && npm run build && cd ../chrome-extension && npm run build",
+      "dev": "concurrently -n tsc,web,ext -c cyan,green,magenta \"npm run dev:tsc\" \"npm run dev:web\" \"npm run dev:ext\"",
+      "dev:tsc": "tsc --watch --preserveWatchOutput",
+      "dev:web": "cd example/web && npm run dev",
+      "dev:ext": "cd example/chrome-extension && npm run dev",
       "check": "biome check . --write && tsc --noEmit && cd example/web && npm run check && cd ../node && npm run check",
       "prepare": "husky",
       "test": "vitest",
@@ -31,6 +35,8 @@
    },
    "dependencies": {
       "@babel/parser": "^7.26.10",
+      "@babel/preset-env": "^7.28.3",
+      "@babel/standalone": "^7.28.4",
       "@babel/types": "^7.26.10"
    },
    "devDependencies": {
@@ -39,6 +45,7 @@
       "@types/node": "^24.5.2",
       "@vitest/ui": "^3.2.4",
       "concurrently": "^9.2.1",
+      "esbuild": "^0.25.10",
       "happy-dom": "^15.11.7",
       "husky": "^9.1.7",
       "typescript": "^5.9.2",

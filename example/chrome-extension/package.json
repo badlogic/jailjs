@@ -1,0 +1,31 @@
+{
+  "name": "jailjs-chrome-extension-example",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "npm run clean && npm run css && npm run bundle",
+    "build:chrome": "npm run clean && npm run css && BROWSER=chrome npm run bundle",
+    "build:firefox": "npm run clean && npm run css && BROWSER=firefox npm run bundle",
+    "dev": "npm run build && concurrently -n css,js -c yellow,blue \"npm run css:watch\" \"npm run watch:bundle\"",
+    "clean": "rm -rf dist-chrome dist-firefox",
+    "css": "npx @tailwindcss/cli -i src/app.css -o dist-chrome/app.css && npx @tailwindcss/cli -i src/app.css -o dist-firefox/app.css",
+    "css:watch": "npx @tailwindcss/cli -i src/app.css -o dist-chrome/app.css --watch",
+    "bundle": "node scripts/build.mjs",
+    "watch:bundle": "node scripts/build.mjs --watch",
+    "check": "biome check --config-path ../../biome.json src/ && tsc --noEmit"
+  },
+  "dependencies": {
+    "@mariozechner/jailjs": "file:../.."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.2.5",
+    "@tailwindcss/cli": "^4.1.14",
+    "@types/chrome": "^0.1.22",
+    "chokidar-cli": "^3.0.0",
+    "concurrently": "^9.2.1",
+    "esbuild": "^0.25.10",
+    "tailwindcss": "^4.1.14",
+    "typescript": "^5.9.3"
+  }
+}
