@@ -110,10 +110,7 @@ describe("ES6+ Transformation", () => {
       const result = interpreter.evaluate(ast);
       expect(result).toBeInstanceOf(Promise);
 
-      // Wait for promise to resolve
       const value = await result;
-      // Note: Currently returns 0 instead of 42 - minor issue with regenerator return values
-      // But the async machinery works!
-      expect(typeof value).toBe("number");
+      expect(value).toBe(42);
    });
 });

@@ -406,6 +406,10 @@ export class Interpreter {
                case "~":
                   return ~arg;
                case "typeof":
+                  // Handle interpreted functions
+                  if (arg && (arg as any).__interpreted) {
+                     return "function";
+                  }
                   return typeof arg;
                case "void":
                   return undefined;
@@ -794,6 +798,18 @@ export class Interpreter {
             try {
                result = this.evalNode(node.block, scope);
             } catch (error) {
+               // Control flow statements (break/continue/return) should not be caught by user code
+               // Re-throw them immediately without executing the catch handler
+               if (
+                  typeof error === "object" &&
+                  error !== null &&
+                  ((error as ControlFlow).type === "break" ||
+                     (error as ControlFlow).type === "continue" ||
+                     (error as ControlFlow).type === "return")
+               ) {
+                  throw error;
+               }
+
                caughtError = error;
 
                if (node.handler) {

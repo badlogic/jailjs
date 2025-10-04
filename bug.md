@@ -119,3 +119,50 @@ All issues fixed. Async/await now works!
 Async return values are currently incorrect (returns 0 instead of 42).
 This is a minor issue with how regenerator's state machine handles return values.
 The core async machinery works - Promises are created and resolved correctly.
+
+## Return Value Investigation - RESOLVED! ✅
+
+### The Problem
+Async functions resolved to `undefined` instead of the correct return value.
+
+Test case:
+```javascript
+async function test() {
+  const x = await Promise.resolve(42);
+  return x;
+}
+test(); // Was resolving to undefined, should be 42
+```
+
+### Root Cause
+**Control flow exception leakage into user code variables!**
+
+The regenerator runtime uses try/catch blocks for control flow. When a `break` statement was executed inside a try block:
+
+1. Our interpreter throws `{ type: 'break', label: undefined }` as an exception
+2. The catch block catches it: `catch(t) { ... }`
+3. The catch body assigns it to variables: `u = t`
+4. We re-throw it correctly, but the damage is done - `u` now contains our internal control flow object instead of the return value (42)
+
+### The Fix
+Modified `TryStatement` handler in interpreter.ts to re-throw control flow exceptions immediately without executing the catch handler:
+
+```typescript
+catch (error) {
+  // Control flow statements should not be caught by user code
+  if (error.type === "break" || error.type === "continue" || error.type === "return") {
+    throw error;  // Re-throw immediately, don't bind to catch parameter
+  }
+
+  // Normal exceptions continue with catch handling
+  caughtError = error;
+  // ... execute catch handler ...
+}
+```
+
+This prevents our internal control flow objects from leaking into user code variables, allowing the regenerator state machine to work correctly.
+
+### Test Results
+✅ All 90 tests passing
+✅ Async functions resolve with correct values
+✅ Complex async/await works (multiple awaits, etc.)
