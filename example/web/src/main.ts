@@ -57,6 +57,22 @@ JSON.stringify({
   rest,
   total: [...rest].reduce((a, b) => a + b, 0)
 })`,
+
+   async: `// Async/await transformed to ES5
+async function fetchData(delay) {
+  const result = await new Promise(resolve => {
+    setTimeout(() => resolve({ value: 42 }), delay);
+  });
+  return result.value;
+}
+
+async function processData() {
+  const x = await fetchData(100);
+  const y = await fetchData(50);
+  return { x, y, sum: x + y };
+}
+
+processData()`,
 };
 
 const codeTextarea = document.getElementById("code") as HTMLTextAreaElement;
@@ -74,6 +90,7 @@ const interpreter = new Interpreter(
       Date: Date,
       Object: Object,
       Array: Array,
+      setTimeout: setTimeout,
    },
    {
       parse: parse,
@@ -90,7 +107,7 @@ document.querySelectorAll(".example-btn").forEach((btn) => {
    });
 });
 
-executeButton.addEventListener("click", () => {
+executeButton.addEventListener("click", async () => {
    const code = codeTextarea.value.trim();
 
    if (!code) {
@@ -105,7 +122,14 @@ executeButton.addEventListener("click", () => {
       // Transform all code to ES5 (handles both ES5 and ES6+ input)
       const ast = transformToES5(code);
       const result = interpreter.evaluate(ast);
-      showResult(formatResult(result), true);
+
+      // Handle promises (from async functions)
+      if (result instanceof Promise) {
+         const resolvedResult = await result;
+         showResult(formatResult(resolvedResult), true);
+      } else {
+         showResult(formatResult(result), true);
+      }
    } catch (error: any) {
       showResult(`Error: ${error.message}\n\n${error.stack || ""}`, false);
    } finally {
