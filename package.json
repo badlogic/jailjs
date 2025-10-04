@@ -1,7 +1,21 @@
 {
    "name": "@mariozechner/jailjs",
    "version": "0.1.0",
-   "description": "JavaScript AST interpreter for sandboxed execution in browsers and Node.js",
+   "description": "Lightweight JavaScript interpreter for isolated execution. For plugins, user scripts, and browser extensions. Not for adversarial code - use SandboxJS or isolated-vm for that.",
+   "keywords": [
+      "javascript",
+      "interpreter",
+      "sandbox",
+      "isolation",
+      "ast",
+      "eval",
+      "plugin",
+      "user-scripts",
+      "es5",
+      "es6",
+      "browser",
+      "nodejs"
+   ],
    "author": "Mario Zechner",
    "type": "module",
    "main": "./dist/index.js",

@@ -1,6 +1,9 @@
 # JailJS
 
-JavaScript AST interpreter for sandboxed execution in browsers and Node.js.
+Lightweight JavaScript AST interpreter for **isolated execution** in browsers and Node.js.
+
+**🎯 Optimized for**: Plugin systems, user scripts, browser extensions with limited API surface
+**⚠️ Not for**: Untrusted adversarial code (use [SandboxJS](https://github.com/nyariv/SandboxJS), isolated-vm, or separate processes)
 
 [Read the "behind the scenes" blog post](https://mariozechner.at/posts/2025-10-05-jailjs/)
 
@@ -8,9 +11,11 @@ JavaScript AST interpreter for sandboxed execution in browsers and Node.js.
 
 - **Complete ES5 Support**: Full implementation of all ES5 language features
 - **ES6+ Transformation**: Optional tree-shakeable helper to transform modern JavaScript to ES5
-- **Sandboxed Execution**: Run untrusted code in a controlled environment with custom globals
-- **Tree-shakeable**: Separate parser from interpreter - parse ahead-of-time and bundle only the 10 KB interpreter
+- **Scope Isolation**: Custom global environment, frozen built-ins (Math/JSON/console)
+- **Tree-shakeable**: Separate parser from interpreter - parse ahead-of-time and bundle only ~10 KB
 - **Universal**: Works in browsers and Node.js
+
+**Security Model**: Provides **isolation**, not comprehensive sandboxing. See [Security](#security) for limitations.
 
 ## Installation
 
@@ -263,11 +268,80 @@ const interpreter = new Interpreter({
 // - Monitor and log all executed code
 ```
 
-For mission-critical security sandboxing, consider:
-- [SandboxJS](https://github.com/nyariv/SandboxJS) - Whitelist-based prototype access control
+### Comparison with SandboxJS
+
+JailJS is **lightweight and simple**, while [SandboxJS](https://github.com/nyariv/SandboxJS) is **more secure but complex**:
+
+| Feature | JailJS | SandboxJS |
+|---------|--------|-----------|
+| **Frozen built-ins** | ✅ Math, JSON, console | ✅ Configurable |
+| **Prototype whitelist** | ❌ No whitelist | ✅ Full whitelist system |
+| **Execution quota** | ⚠️ Simple counter | ✅ BigInt quota + hooks |
+| **Audit mode** | ❌ No | ✅ Reports all API access |
+| **Jailbreak tests** | ❌ No | ✅ Comprehensive suite |
+| **eval/Function sandbox** | ✅ Re-interpret eval | ✅ Recursive sandboxing |
+| **Bundle size** | 🎯 ~10 KB | ~larger |
+| **Complexity** | 🎯 Low | Higher |
+
+**When to use JailJS**:
+- ✅ Plugin systems with trusted code
+- ✅ User scripts with limited API surface
+- ✅ Size-constrained environments
+- ✅ Simple isolation needs
+
+**When to use SandboxJS**:
+- ✅ Untrusted third-party code
+- ✅ Need prototype access control
+- ✅ Require audit/compliance reporting
+- ✅ Mission-critical security
+
+**Other alternatives**:
 - [isolated-vm](https://github.com/laverdet/isolated-vm) - V8 isolates for Node.js
 - [QuickJS](https://bellard.org/quickjs/) - Separate JavaScript engine
 - Web Workers or separate processes for true isolation
+
+### To Match SandboxJS Security
+
+To make JailJS as secure as SandboxJS, we would need:
+
+**1. Prototype Whitelist System** (biggest gap)
+```typescript
+// SandboxJS approach: check every prototype access
+const whitelist = new Map([
+  [Array.prototype, new Set(['push', 'pop', 'map', 'filter'])],
+  [Object.prototype, new Set(['hasOwnProperty', 'toString'])],
+]);
+// Throw error if accessing non-whitelisted method
+```
+
+**2. Execution Quota with Hooks**
+```typescript
+// SandboxJS approach: BigInt ticks + callback
+const sandbox = new Interpreter({}, {
+  executionQuota: 1000000n,
+  onQuotaReached: (ticks) => {
+    // Allow user to decide: continue or abort
+    return confirm('Continue execution?');
+  }
+});
+```
+
+**3. Audit Mode**
+```typescript
+// SandboxJS approach: track all API access
+const report = Interpreter.audit(code);
+// Returns: { globals: Set(['Math', 'Array']), prototypes: {...} }
+```
+
+**4. Jailbreak Prevention Tests**
+- Test against `[].filter.constructor` escapes
+- Test against prototype chain climbing
+- Test against Function constructor reconstruction
+
+**Contributions welcome!** If you need these features, consider:
+- Using SandboxJS (production-ready, maintained)
+- Contributing to JailJS (help us add these features)
+- Implementing your own prototype checks on top of JailJS
 
 ## API
 
