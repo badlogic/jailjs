@@ -1,6 +1,6 @@
 {
    "name": "@mariozechner/jailjs",
-   "version": "0.1.0",
+   "version": "0.1.1",
    "description": "Lightweight JavaScript interpreter for isolated execution. For plugins, user scripts, and browser extensions. Not for adversarial code - use SandboxJS or isolated-vm for that.",
    "keywords": [
       "javascript",
