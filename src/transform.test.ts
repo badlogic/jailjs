@@ -113,4 +113,43 @@ describe("ES6+ Transformation", () => {
       const value = await result;
       expect(value).toBe(42);
    });
+
+   it("should handle for...of with array-like objects (NodeList)", () => {
+      const code = `
+			const arrayLike = { 0: 'a', 1: 'b', 2: 'c', length: 3 };
+			const items = Array.from(arrayLike);
+			const result = [];
+			for (const item of items) {
+				result.push(item);
+			}
+			result.join(',');
+		`;
+      const ast = transformToES5(code);
+      const interpreter = new Interpreter();
+      const result = interpreter.evaluate(ast);
+      expect(result).toBe("a,b,c");
+   });
+
+   it("should handle for...of with NodeList-like objects directly", () => {
+      // Simulate NodeList-like object (plain object with numeric keys and length)
+      const mockNodeList = {
+         0: { href: "link1" },
+         1: { href: "link2" },
+         2: { href: "link3" },
+         length: 3,
+      };
+
+      // Should work directly without Array.from()
+      const code = `
+			const result = [];
+			for (const link of links) {
+				result.push(link.href);
+			}
+			result.join(',');
+		`;
+      const ast = transformToES5(code);
+      const interpreter = new Interpreter({ links: mockNodeList });
+      const result = interpreter.evaluate(ast);
+      expect(result).toBe("link1,link2,link3");
+   });
 });

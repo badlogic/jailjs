@@ -74,6 +74,17 @@ console.log(result); // [2, 4, 6]
 
 Supports: arrow functions, classes, template literals, destructuring, spread operators, async/await, TypeScript, JSX.
 
+**Top-level await:** Wrap code in an async IIFE:
+
+```typescript
+const code = `
+  (async () => {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    console.log('Done!');
+  })();
+`;
+```
+
 ### Tree-shaking
 
 Parse ahead-of-time to bundle only the interpreter (~10 KB):

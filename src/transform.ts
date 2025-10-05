@@ -74,7 +74,7 @@ export function transformToES5(
          presets,
          filename: "script.js",
          ast: true,
-         code: false,
+         code: true, // Need code output to patch helpers
          // Babel assumptions for pure ES5 output
          assumptions: {
             noDocumentAll: true,
@@ -86,11 +86,29 @@ export function transformToES5(
          },
       });
 
-      if (!result?.ast?.program) {
-         throw new Error("Babel transformation failed to produce an AST");
+      if (!result?.code) {
+         throw new Error("Babel transformation failed to produce code");
       }
 
-      return result.ast.program as t.Program;
+      // Patch Babel's _unsupportedIterableToArray to handle NodeList-like objects
+      let patchedCode = result.code;
+      patchedCode = patchedCode.replace(
+         /(function _unsupportedIterableToArray\([^)]+\)\s*\{\s*if\s*\([^)]+\)\s*\{\s*if\s*\([^)]+typeof[^)]+\)\s*return[^;]+;)/,
+         '$1 if ("object" == typeof r && "length" in r) return _arrayLikeToArray(r, a);',
+      );
+
+      // Parse patched code back to AST
+      const finalResult = Babel.transform(patchedCode, {
+         filename: "script.js",
+         ast: true,
+         code: false,
+      });
+
+      if (!finalResult?.ast?.program) {
+         throw new Error("Failed to parse patched code");
+      }
+
+      return finalResult.ast.program as t.Program;
    } catch (error: any) {
       throw new Error(`Failed to transform code: ${error.message}`);
    }

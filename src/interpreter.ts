@@ -323,9 +323,11 @@ export class Interpreter {
                case "**":
                   return left ** right;
                case "==":
-                  return left === right;
+                  // biome-ignore lint/suspicious/noDoubleEquals: Intentional loose equality for ES5 spec compliance
+                  return left == right;
                case "!=":
-                  return left !== right;
+                  // biome-ignore lint/suspicious/noDoubleEquals: Intentional loose equality for ES5 spec compliance
+                  return left != right;
                case "===":
                   return left === right;
                case "!==":
@@ -934,7 +936,7 @@ export class Interpreter {
          boundFunc.apply = (_: any, args: any[] = []) => {
             return this.callFunction(func, [...boundArgs, ...args], closureScope, thisArg);
          };
-         boundFunc.bind = (newThisArg: any, ...newBoundArgs: any[]) => {
+         boundFunc.bind = (_newThisArg: any, ...newBoundArgs: any[]) => {
             // Bind to the already-bound thisArg, ignore newThisArg
             return func.bind(thisArg, ...boundArgs, ...newBoundArgs);
          };
