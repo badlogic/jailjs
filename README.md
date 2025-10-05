@@ -2,6 +2,8 @@
 
 JavaScript AST interpreter for sandboxed execution in browsers and Node.js.
 
+[Read the "behind the scenes" blog post](https://mariozechner.at/posts/2025-10-05-jailjs/)
+
 ## Features
 
 - **Complete ES5 Support**: Full implementation of all ES5 language features
